@@ -28,13 +28,31 @@ class DocumentoDescargaController extends Controller
         abort_unless($documento->ruta_archivo, 404);
 
         abort_unless(
-            Storage::disk('local')->exists($documento->ruta_archivo),
-            404
-        );
+    Storage::disk('s3')->exists($documento->ruta_archivo),
+        404,
+        'El documento no existe en Supabase Storage.'
+    );
 
-        return response()->download(
-            Storage::disk('local')->path($documento->ruta_archivo),
-            $documento->nombre_archivo
-        );
+    $stream = Storage::disk('s3')->readStream(
+    $documento->ruta_archivo
+    );
+
+    if ($stream === false) {
+        abort(404, 'No se pudo encontrar el documento.');
+    }
+
+    return response()->streamDownload(
+        function () use ($stream) {
+            fpassthru($stream);
+
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+    },
+    $documento->nombre_archivo,
+    [
+        'Content-Type' => 'application/octet-stream',
+    ]
+);
     }
 }

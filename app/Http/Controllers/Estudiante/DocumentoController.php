@@ -75,10 +75,7 @@ class DocumentoController extends Controller
             if ($request->hasFile('archivo')) {
                 $archivo = $request->file('archivo');
 
-                $ruta = $archivo->store(
-                    'documentos/proyecto-' . $proyecto->id,
-                    'local'
-                );
+                $ruta = $archivo->store('documentos', 's3');
 
                 $documento = [
                     'nombre_archivo' => $archivo->getClientOriginalName(),
@@ -112,7 +109,7 @@ class DocumentoController extends Controller
             });
         } catch (\Throwable $error) {
             if ($ruta !== null) {
-                Storage::disk('local')->delete($ruta);
+                Storage::disk('s3')->delete($ruta);
             }
 
             throw $error;
