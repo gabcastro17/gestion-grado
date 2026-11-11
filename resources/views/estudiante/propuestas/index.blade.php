@@ -1,0 +1,8 @@
+@extends('layouts.app')
+@section('title','Banco de propuestas')
+@section('content')
+<section class="unab-hero mb-4"><div class="unab-kicker mb-2">ESTUDIANTES</div><h1 class="fw-bold">Banco de propuestas</h1><p class="mb-0">Explora ideas de grado publicadas por docentes y encuentra la que mejor se adapte a tus intereses.</p></section>
+<form class="unab-card p-3 mb-4" method="GET" action="{{ route('estudiante.propuestas.index') }}"><div class="input-group"><input class="form-control" name="buscar" value="{{ $buscar }}" placeholder="Buscar por título o descripción"><button class="btn btn-primary"><i class="bi bi-search me-1"></i>Buscar</button></div></form>
+<div class="row g-4">@forelse($propuestas as $propuesta)<div class="col-md-6 col-xl-4"><div class="unab-card h-100"><div class="card-body d-flex flex-column"><div class="mb-3"><span class="badge badge-publicada">Disponible</span></div><h4 class="fw-bold">{{ $propuesta->titulo }}</h4><p class="text-secondary small"><i class="bi bi-person-badge me-1"></i>Prof. {{ $propuesta->profesor->name }}</p><p class="text-secondary flex-grow-1">{{ \Illuminate\Support\Str::limit($propuesta->descripcion, 155) }}</p><a href="{{ route('estudiante.propuestas.show',$propuesta) }}" class="btn btn-outline-primary align-self-start">Ver detalles <i class="bi bi-arrow-right ms-1"></i></a></div></div></div>@empty<div class="col-12"><div class="unab-card unab-empty"><i class="bi bi-inbox fs-1 d-block mb-2"></i>No hay propuestas disponibles.</div></div>@endforelse</div>
+<div class="mt-4">{{ $propuestas->links('pagination::bootstrap-5') }}</div>
+@endsection
