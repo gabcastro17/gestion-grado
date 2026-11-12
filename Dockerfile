@@ -28,7 +28,7 @@ COPY . .
 RUN npm run build
 
 # Etapa 3: ejecutar Laravel
-FROM php:8.3-cli-bookworm
+FROM php:8.5-cli-bookworm
 
 RUN apt-get update && apt-get install -y \
     libicu-dev \
