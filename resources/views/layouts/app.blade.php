@@ -5,7 +5,7 @@
  <title>@yield('title', 'Gestión de Grado') | UNAB</title>
  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
- <link href="{{ asset('css/unab.css') }}" rel="stylesheet">
+ <link href="{{ secure_asset('css/unab.css') }}" rel="stylesheet">
 </head>
 <body>
 <header class="unab-topbar"><div class="container-fluid px-3 px-lg-5 py-3 d-flex align-items-center justify-content-between gap-3">
