@@ -7,6 +7,7 @@ use App\Models\Proyecto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\AsignacionJuradosService;
 
 //protege la evaluacion para que solo la pueda hacer el profesor director
 //evita que se registren dos evaluaciones simultaneas del mismo intento
@@ -30,7 +31,7 @@ class EvaluacionDirectorController extends Controller
             ],
         ]);
 
-        DB::transaction(function () use ($proyecto, $datos, $request) {
+        DB::transaction(function () use ($proyecto, $datos, $request) { 
 
             $proyecto = Proyecto::whereKey($proyecto->id)
                 ->lockForUpdate()
@@ -84,6 +85,11 @@ class EvaluacionDirectorController extends Controller
                 ]);
             }
         });
+
+        if ((float) $datos['nota'] >= 3.0) {
+            app(AsignacionJuradosService::class)
+                ->completarInvitaciones($proyecto);
+        } //al aprobar la evaluacion 1, se asignan los jurados automaticamente
 
         return redirect()
             ->route('profesor.proyectos.show', $proyecto)

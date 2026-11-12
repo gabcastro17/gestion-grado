@@ -13,11 +13,17 @@ use Illuminate\Validation\ValidationException;
 
 class DocumentoController extends Controller
 {
-    public function show(Request $request, Proyecto $proyecto, Entrega $entrega)
-    {
+    public function show(
+        Request $request,
+        Proyecto $proyecto,
+        Entrega $entrega
+    ) {
         $this->autorizar($request, $proyecto, $entrega);
 
-        $entrega->load(['documentos', 'retroalimentaciones.profesor']);
+        $entrega->load([
+            'documentos',
+            'retroalimentaciones.profesor',
+        ]);
 
         return view('estudiante.entregas.show', compact(
             'proyecto',
@@ -25,9 +31,61 @@ class DocumentoController extends Controller
         ));
     }
 
-    public function store(Request $request, Proyecto $proyecto, Entrega $entrega)
-    {
+    public function store(
+        Request $request,
+        Proyecto $proyecto,
+        Entrega $entrega
+    ) {
         $this->autorizar($request, $proyecto, $entrega);
+
+        if ($proyecto->estado !== 'activo') {
+            throw ValidationException::withMessages([
+                'entrega' => 'El proyecto no está activo.',
+            ]);
+        }
+
+        // Bloquear documentos después de aprobar evaluación 1.
+        if (in_array($proyecto->fase_evaluacion, [
+            'pendiente_jurados',
+            'evaluacion_2',
+            'finalizado',
+        ], true)) {
+            throw ValidationException::withMessages([
+                'entrega' => 'Este proyecto ya pasó a jurados y no admite nuevos documentos.',
+            ]);
+        }
+
+        // Comprobar las fechas según la fase.
+        if ($proyecto->fase_evaluacion === 'correcciones') {
+            if (
+                !$proyecto->fecha_limite_correccion ||
+                now()->startOfDay()->gt(
+                    $proyecto->fecha_limite_correccion
+                )
+            ) {
+                throw ValidationException::withMessages([
+                    'entrega' => 'El plazo para presentar correcciones ha vencido.',
+                ]);
+            }
+        } else {
+            if (
+                $entrega->fecha_inicio &&
+                now()->lt($entrega->fecha_inicio->copy()->startOfDay())
+            ) {
+                throw ValidationException::withMessages([
+                    'entrega' => 'La entrega todavía no está habilitada.',
+                ]);
+            }
+
+            if (
+                $entrega->fecha_limite &&
+                now()->gt($entrega->fecha_limite->copy()->endOfDay())
+            ) {
+                throw ValidationException::withMessages([
+                    'entrega' => 'La fecha límite de esta entrega ya pasó.',
+                ]);
+            }
+        }
 
         $datos = $request->validate([
             'archivo' => [
@@ -45,24 +103,6 @@ class DocumentoController extends Controller
             ],
         ]);
 
-        if ($proyecto->estado !== 'activo') {
-            throw ValidationException::withMessages([
-                'entrega' => 'El proyecto no está activo.',
-            ]);
-        }
-
-        if ($entrega->fecha_inicio && now()->lt($entrega->fecha_inicio->startOfDay())) {
-            throw ValidationException::withMessages([
-                'entrega' => 'La entrega todavía no está habilitada.',
-            ]);
-        }
-
-        if ($entrega->fecha_limite && now()->gt($entrega->fecha_limite->endOfDay())) {
-            throw ValidationException::withMessages([
-                'entrega' => 'La fecha límite de esta entrega ya pasó.',
-            ]);
-        }
-
         if ($request->hasFile('archivo') && $request->filled('enlace')) {
             throw ValidationException::withMessages([
                 'archivo' => 'Envía un archivo o un enlace, no ambos.',
@@ -75,7 +115,17 @@ class DocumentoController extends Controller
             if ($request->hasFile('archivo')) {
                 $archivo = $request->file('archivo');
 
-                $ruta = $archivo->store('documentos', 's3');
+                // Guardar el documento en Supabase Storage.
+                $ruta = $archivo->store(
+                    'documentos/proyecto-' . $proyecto->id,
+                    's3'
+                );
+
+                if (!$ruta) {
+                    throw ValidationException::withMessages([
+                        'archivo' => 'No se pudo subir el documento.',
+                    ]);
+                }
 
                 $documento = [
                     'nombre_archivo' => $archivo->getClientOriginalName(),
@@ -94,6 +144,7 @@ class DocumentoController extends Controller
 
             DB::transaction(function () use (
                 $request,
+                $proyecto,
                 $entrega,
                 $documento
             ) {
@@ -106,10 +157,24 @@ class DocumentoController extends Controller
                 $entrega->update([
                     'estado' => 'entregada',
                 ]);
+
+                // Después de subir la corrección,
+                // el director puede evaluar nuevamente.
+                if ($proyecto->fase_evaluacion === 'correcciones') {
+                    $proyecto->update([
+                        'fase_evaluacion' => 'pendiente_evaluacion_1',
+                        'fecha_limite_correccion' => null,
+                    ]);
+                }
             });
         } catch (\Throwable $error) {
+            // Evitar dejar archivos huérfanos si falla la BD.
             if ($ruta !== null) {
-                Storage::disk('s3')->delete($ruta);
+                try {
+                    Storage::disk('s3')->delete($ruta);
+                } catch (\Throwable $deleteError) {
+                    report($deleteError);
+                }
             }
 
             throw $error;
@@ -120,7 +185,10 @@ class DocumentoController extends Controller
                 $proyecto,
                 $entrega,
             ])
-            ->with('success', 'Documento enviado correctamente.');
+            ->with(
+                'success',
+                'Documento enviado correctamente.'
+            );
     }
 
     private function autorizar(

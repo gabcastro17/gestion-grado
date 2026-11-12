@@ -230,6 +230,94 @@
         </div>
     </div>
 
+@endif 
+{{--aca acaba la evaluacion 1--}} 
+
+
+
+@php
+    $resultadoFinal = app(
+        \App\Services\CalculoNotaFinalService::class
+    )->calcular($proyecto);
+@endphp
+
+@if($resultadoFinal)
+
+    <div class="card shadow-sm mt-4 mb-4">
+
+        <div class="card-header text-white"
+             style="background-color: #54266F;">
+            <h5 class="mb-0">
+                Resultado final del proyecto
+            </h5>
+        </div>
+
+        <div class="card-body p-4">
+
+            <p class="text-muted">
+                Las dos evaluaciones han sido completadas.
+            </p>
+
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6>Evaluación 1</h6>
+                        <h3 class="fw-bold">
+                            {{ number_format($resultadoFinal['evaluacion_1'], 2) }}
+                        </h3>
+                        <small class="text-muted">
+                            Profesor director
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6>Evaluación 2</h6>
+                        <h3 class="fw-bold">
+                            {{ number_format($resultadoFinal['evaluacion_2'], 2) }}
+                        </h3>
+                        <small class="text-muted">
+                            Promedio de los dos jurados
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6>Nota final</h6>
+                        <h3 class="fw-bold">
+                            {{ number_format($resultadoFinal['nota_final'], 2) }}
+                        </h3>
+                        <small class="text-muted">
+                            Sobre 5.00
+                        </small>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="alert {{ $resultadoFinal['aprobado'] ? 'alert-success' : 'alert-danger' }}">
+
+                @if($resultadoFinal['aprobado'])
+                    <strong>Proyecto aprobado.</strong>
+                @else
+                    <strong>Proyecto no aprobado.</strong>
+                @endif
+
+            </div>
+
+            <p class="text-muted mb-0">
+                La nota final corresponde al promedio entre
+                la evaluación del director y el promedio
+                de las calificaciones de los dos jurados.
+            </p>
+
+        </div>
+    </div>
+
 @endif
+
 
 @endsection

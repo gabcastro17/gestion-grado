@@ -249,6 +249,26 @@ Route::middleware(['auth', 'rol:profesor'])
         Route::get('/proyectos/{proyecto}/entregas/{entrega}', [
             EntregaController::class, 'show'
         ])->name('entregas.show');
+        
+        Route::get('/jurados', [
+            \App\Http\Controllers\Profesor\InvitacionJuradoController::class,
+            'index',
+        ])->name('jurados.index');
+
+        Route::post('/jurados/{jurado}/aceptar', [
+            \App\Http\Controllers\Profesor\InvitacionJuradoController::class,
+            'aceptar',
+        ])->name('jurados.aceptar');
+
+        Route::post('/jurados/{jurado}/rechazar', [
+            \App\Http\Controllers\Profesor\InvitacionJuradoController::class,
+            'rechazar',
+        ])->name('jurados.rechazar');
+
+        Route::post('/jurados/{jurado}/calificar', [
+            \App\Http\Controllers\Profesor\CalificacionJuradoController::class,
+            'store',
+        ])->name('jurados.calificar');
     });
 
 // entregas y documentos del estudiante
@@ -272,5 +292,18 @@ Route::middleware('auth')
         DocumentoDescargaController::class, 'descargar'
     ])
     ->name('documentos.descargar');
+
+Route::middleware('auth')->group(function () {
+    Route::get(
+        '/telegram/vincular',
+        [\App\Http\Controllers\TelegramVinculacionController::class, 'mostrar']
+    )->name('telegram.vincular');
+
+    Route::post(
+        '/telegram/generar-codigo',
+        [\App\Http\Controllers\TelegramVinculacionController::class, 'generar']
+    )->middleware('throttle:5,1')
+     ->name('telegram.generar-codigo');
+});
 
 

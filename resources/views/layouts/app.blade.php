@@ -9,7 +9,7 @@
 </head>
 <body>
 <header class="unab-topbar"><div class="container-fluid px-3 px-lg-5 py-3 d-flex align-items-center justify-content-between gap-3">
- <a class="unab-brand" href="{{ auth()->check() ? route('panel') : route('login') }}"><span class="unab-mark">U</span><span>Gestión de Grado<small>Plataforma académica · Estilo UNAB</small></span></a>
+ <a class="unab-brand" href="{{ auth()->check() ? route('panel') : route('login') }}"><span class="unab-mark">U</span><span>Gestión de Grado<small>Plataforma académica · UNAB</small></span></a>
  @auth <div class="d-flex align-items-center gap-3"><span class="d-none d-sm-inline text-secondary small"><i class="bi bi-person-circle me-1"></i>{{ auth()->user()->name }}</span><form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Salir</button></form></div> @endauth
 </div></header>
 @auth
@@ -30,7 +30,7 @@
  @if(session('success'))<div class="alert alert-success border-0 shadow-sm">{{ session('success') }}</div>@endif
  @if($errors->any())<div class="alert alert-danger border-0 shadow-sm"><strong>Revisa la información:</strong><ul class="mb-0 mt-2">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
  @yield('content')
- <footer class="unab-footer">Gestión de Grado · Diseño académico inspirado en la UNAB · {{ date('Y') }}</footer>
+ <footer class="unab-footer">Gestión de Grado {{ date('Y') }}</footer>
 </div>
 @auth </main></div> @else </main> @endauth
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -93,4 +93,115 @@
     </div>
 </div>
 
+
+
+@php
+    $resultadoFinal = app(
+        \App\Services\CalculoNotaFinalService::class
+    )->calcular($proyecto);
+@endphp
+
+@if($resultadoFinal)
+
+    <div class="card shadow-sm border-0 mt-4 mb-4">
+
+        <div class="card-header text-white"
+             style="background-color: #54266F;">
+            <h5 class="mb-0">
+                Resultado final de tu proyecto
+            </h5>
+        </div>
+
+        <div class="card-body p-4">
+
+            <p class="text-muted">
+                Tu proyecto ha completado las dos etapas
+                de evaluación.
+            </p>
+
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6>Evaluación 1</h6>
+
+                        <h3 class="fw-bold">
+                            {{ number_format($resultadoFinal['evaluacion_1'], 2) }}
+                        </h3>
+
+                        <small class="text-muted">
+                            Nota del profesor director
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6>Evaluación 2</h6>
+
+                        <h3 class="fw-bold">
+                            {{ number_format($resultadoFinal['evaluacion_2'], 2) }}
+                        </h3>
+
+                        <small class="text-muted">
+                            Promedio de los dos jurados
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6>Nota final</h6>
+
+                        <h3 class="fw-bold">
+                            {{ number_format($resultadoFinal['nota_final'], 2) }}
+                        </h3>
+
+                        <small class="text-muted">
+                            Calificación definitiva
+                        </small>
+                    </div>
+                </div>
+
+            </div>
+
+            @if($resultadoFinal['aprobado'])
+
+                <div class="alert alert-success mb-0">
+                    <h5 class="fw-bold">
+                        ¡Proyecto aprobado!
+                    </h5>
+
+                    Tu nota final es igual o superior a 3.0.
+                    Has aprobado la evaluación de tu proyecto de grado.
+                </div>
+
+            @else
+
+                <div class="alert alert-danger mb-0">
+                    <h5 class="fw-bold">
+                        Proyecto no aprobado
+                    </h5>
+
+                    Tu nota final es inferior a 3.0.
+                    Puedes consultar las observaciones
+                    con tu profesor director.
+                </div>
+
+            @endif
+
+        </div>
+    </div>
+
+@elseif($proyecto->fase_evaluacion === 'finalizado')
+
+    <div class="alert alert-warning mt-4">
+        El proyecto está finalizado, pero todavía no
+        se puede calcular su resultado. Consulta
+        con tu profesor director.
+    </div>
+
+@endif
+
+
 @endsection

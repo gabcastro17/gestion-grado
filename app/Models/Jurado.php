@@ -12,12 +12,15 @@ class Jurado extends Model
         'proyecto_id',
         'profesor_id',
         'fecha_asignacion',
+        'estado',
+        'fecha_respuesta',
     ];
 
     protected function casts(): array
     {
         return [
             'fecha_asignacion' => 'datetime',
+            'fecha_respuesta' => 'datetime',
         ];
     }
 
